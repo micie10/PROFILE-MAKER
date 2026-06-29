@@ -240,6 +240,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  align-self: flex-start;
 }
 
 /* header strip */
@@ -280,6 +281,7 @@ body {
   letter-spacing: 0.04em;
   width: 100%;
   border-bottom: 1px dashed rgba(255,255,255,0.3);
+  text-align: center;
 }
 .name-input-main::placeholder { color: rgba(255,255,255,0.3); }
 .name-input-sub {
@@ -292,6 +294,7 @@ body {
   width: 100%;
   border-bottom: 1px dashed rgba(255,255,255,0.2);
   margin-top: 4px;
+  text-align: center;
 }
 .name-input-sub::placeholder { color: rgba(255,255,255,0.25); }
 
@@ -338,7 +341,7 @@ body {
 .avatar-zone:hover .avatar-change-btn { opacity: 1; }
 
 /* left meta items */
-.left-meta { padding: 0; flex: 1; }
+.left-meta { padding: 0; }
 .meta-row {
   display: flex;
   border-bottom: 1px solid var(--c-border);
@@ -354,10 +357,26 @@ body {
   color: var(--c-ui-dim);
   background: #fafafa;
   border-right: 1px solid var(--c-border);
-  display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: center;
   padding: 6px 8px;
   font-weight: 500;
+  text-align: center;
 }
+.meta-label-input {
+  width: 68px;
+  flex-shrink: 0;
+  background: #fafafa;
+  border: none; outline: none;
+  border-right: 1px solid var(--c-border);
+  font-family: var(--app-font);
+  font-size: 0.67rem;
+  letter-spacing: 0.06em;
+  color: var(--c-ui-dim);
+  font-weight: 500;
+  padding: 6px 8px;
+  text-align: center;
+}
+.meta-label-input::placeholder { color: #ccc; }
 .meta-value {
   flex: 1;
   display: flex; align-items: center;
@@ -371,6 +390,7 @@ body {
   color: var(--c-ui);
   width: 100%;
   line-height: 1.5;
+  text-align: center;
 }
 .meta-input::placeholder { color: #ccc; }
 
@@ -463,7 +483,13 @@ body {
   color: rgba(255,255,255,0.85);
   font-weight: 600;
   flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--app-font);
+  min-width: 0;
 }
+.block-head-title:focus { color: #fff; }
 .block-del {
   background: none; border: none;
   color: rgba(255,255,255,0.4);
@@ -506,11 +532,12 @@ body {
   color: var(--c-ui-dim);
   background: #fafafa;
   border-right: 1px solid var(--c-border);
-  display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: center;
   padding: 5px 8px;
   width: 76px;
   flex-shrink: 0;
   font-weight: 500;
+  text-align: center;
 }
 .info-cell-val {
   flex: 1; display: flex; align-items: center;
@@ -521,6 +548,7 @@ body {
   font-family: var(--app-font);
   font-size: 0.8rem; color: var(--c-ui);
   width: 100%; line-height: 1.5;
+  text-align: center;
 }
 .field-input::placeholder { color: #ccc; }
 .field-textarea {
@@ -532,6 +560,7 @@ body {
   padding: 2px 0;
 }
 .field-textarea::placeholder { color: #ccc; }
+.field-textarea.auto-grow { overflow: hidden; resize: none; }
 
 /* text block */
 .text-block-body { line-height: 1.8; }
@@ -871,24 +900,24 @@ body {
 
           <div class="left-meta" id="left-meta">
             <div class="meta-row">
-              <div class="meta-label">나이</div>
+              <input class="meta-label-input" type="text" value="나이" autocomplete="off">
               <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
             </div>
             <div class="meta-row">
-              <div class="meta-label">성별</div>
+              <input class="meta-label-input" type="text" value="성별" autocomplete="off">
               <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
             </div>
             <div class="meta-row">
-              <div class="meta-label">종족</div>
+              <input class="meta-label-input" type="text" value="종족" autocomplete="off">
               <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
             </div>
             <div class="meta-row">
-              <div class="meta-label">직업</div>
+              <input class="meta-label-input" type="text" value="직업" autocomplete="off">
               <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
             </div>
             <div class="meta-row">
-              <div class="meta-label">키</div>
-              <div class="meta-value"><input class="meta-input" type="text" placeholder="— cm" autocomplete="off"></div>
+              <input class="meta-label-input" type="text" value="키" autocomplete="off">
+              <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
             </div>
           </div>
         </div>
@@ -1056,7 +1085,7 @@ const BLOCKS = {
         </div>
         <div class="info-cell full" style="align-items:flex-start">
           <div class="info-cell-label" style="padding-top:8px">외모 묘사</div>
-          <div class="info-cell-val"><textarea class="field-textarea" rows="3" placeholder="자세한 외모 묘사를 작성하세요."></textarea></div>
+          <div class="info-cell-val"><textarea class="field-textarea auto-grow" rows="2" placeholder="자세한 외모 묘사를 작성하세요."></textarea></div>
         </div>
       </div>`
   },
@@ -1074,13 +1103,13 @@ const BLOCKS = {
   personality: {
     title: 'PERSONALITY',
     build: (id) => `
-      <textarea class="field-textarea" rows="5" style="width:100%;padding:4px 0;border:none;outline:none;"
+      <textarea class="field-textarea auto-grow" rows="3" style="width:100%;padding:4px 0;border:none;outline:none;"
         placeholder="캐릭터의 성격, 특성, 말투, 가치관 등을 서술하세요."></textarea>`
   },
   backstory: {
     title: 'BACKSTORY',
     build: (id) => `
-      <textarea class="field-textarea" rows="6" style="width:100%;padding:4px 0;border:none;outline:none;"
+      <textarea class="field-textarea auto-grow" rows="3" style="width:100%;padding:4px 0;border:none;outline:none;"
         placeholder="캐릭터의 과거, 배경, 세계관 내 위치 등을 서술하세요."></textarea>`
   },
   likes: {
@@ -1123,7 +1152,7 @@ const BLOCKS = {
   custom: {
     title: 'CUSTOM',
     build: (id) => `
-      <textarea class="field-textarea" rows="4" style="width:100%;padding:4px 0;border:none;outline:none;"
+      <textarea class="field-textarea auto-grow" rows="3" style="width:100%;padding:4px 0;border:none;outline:none;"
         placeholder="내용을 자유롭게 입력하세요."></textarea>`
   }
 };
@@ -1138,10 +1167,8 @@ function makeBlock(type) {
   wrap.draggable = true;
   wrap.dataset.type = type;
 
-  // custom title editable
-  const titleHtml = type === 'custom'
-    ? `<input class="block-head-title" type="text" value="CUSTOM" style="background:transparent;border:none;outline:none;color:rgba(255,255,255,0.85);font-family:var(--app-font);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;width:100%;" autocomplete="off">`
-    : `<span class="block-head-title">${def.title}</span>`;
+  // all block titles editable
+  const titleHtml = `<input class="block-head-title" type="text" value="${def.title}" autocomplete="off">`;
 
   wrap.innerHTML = `
     <div class="block-head">
@@ -1153,7 +1180,22 @@ function makeBlock(type) {
   `;
 
   attachBlockDrag(wrap);
+  setTimeout(() => initAutoGrow(wrap), 0);
   return wrap;
+}
+
+/* ─ AUTO-GROW TEXTAREA ─
+   Keeps textareas tight to their content height so no large empty
+   gap is left below short placeholder/content (e.g. 외모 묘사). */
+function autoGrow(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+function initAutoGrow(scope) {
+  scope.querySelectorAll('textarea.auto-grow').forEach(ta => {
+    autoGrow(ta);
+    ta.addEventListener('input', () => autoGrow(ta));
+  });
 }
 
 function delBlock(id) {
