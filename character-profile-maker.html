@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자캐 소개 틀 메이커</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&family=Gowun+Dodum&family=Gaegu&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ── PRETENDARD via CDN ── */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── ROOT ── */
+:root {
+  --app-font: 'Pretendard', 'Noto Sans KR', sans-serif;
+  --c-bg: #F4F4F4;
+  --c-ui: #1A1A1A;
+  --c-ui-dim: #555;
+  --c-border: #CCCCCC;
+  --c-accent: #1A1A1A;
+  --c-badge: #1A1A1A;
+  --c-badge-text: #FFFFFF;
+}
+
+body {
+  background: var(--c-bg);
+  color: var(--c-ui);
+  font-family: var(--app-font);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── APP SHELL ── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff;
+  border-bottom: 2px solid var(--c-ui);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  height: 52px;
+}
+.topbar-brand {
+  padding: 0 24px;
+  border-right: 1px solid var(--c-border);
+  height: 100%;
+  display: flex; align-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.topbar-section {
+  padding: 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-right: 1px solid var(--c-border);
+}
+.topbar-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--c-ui-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* font selector */
+.font-select-wrap { position: relative; }
+.font-select {
+  appearance: none;
+  background: #f8f8f8;
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  padding: 5px 28px 5px 10px;
+  font-size: 0.8rem;
+  font-family: var(--app-font);
+  color: var(--c-ui);
+  cursor: pointer;
+  outline: none;
+}
+.font-select:focus { border-color: var(--c-ui); }
+.font-select-arrow {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; font-size: 0.65rem; color: var(--c-ui-dim);
+}
+
+/* color accent picker */
+.accent-swatches { display: flex; gap: 6px; }
+.accent-swatch {
+  width: 20px; height: 20px; border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.accent-swatch:hover { transform: scale(1.2); }
+.accent-swatch.active { border-color: var(--c-ui) !important; }
+
+/* size control */
+.size-control { display: flex; align-items: center; gap: 6px; }
+.size-btn {
+  width: 26px; height: 26px;
+  border: 1px solid var(--c-border);
+  background: #f8f8f8;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.size-btn:hover { background: #e8e8e8; }
+.size-display {
+  font-size: 0.75rem;
+  color: var(--c-ui-dim);
+  width: 36px; text-align: center;
+}
+
+.topbar-spacer { flex: 1; }
+
+.btn-export {
+  margin: 8px 16px;
+  padding: 8px 20px;
+  background: var(--c-ui);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--app-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.btn-export:hover { opacity: 0.8; }
+
+.btn-reset {
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--c-ui-dim);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  font-family: var(--app-font);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-reset:hover { border-color: #999; color: var(--c-ui); }
+
+/* ── EDITOR LAYOUT ── */
+.editor-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid var(--c-border);
+  padding: 20px 12px;
+  overflow-y: auto;
+}
+.sidebar-section-title {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-ui-dim);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--c-border);
+}
+.palette-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 3px;
+  background: #fafafa;
+  margin-bottom: 6px;
+  cursor: grab;
+  font-size: 0.78rem;
+  color: var(--c-ui);
+  transition: all 0.15s;
+  user-select: none;
+  line-height: 1.3;
+}
+.palette-item:hover { border-color: var(--c-ui); background: #f0f0f0; }
+.palette-item:active { cursor: grabbing; }
+.palette-icon { font-size: 0.85rem; flex-shrink: 0; }
+.palette-desc {
+  font-size: 0.67rem;
+  color: var(--c-ui-dim);
+  margin-top: 1px;
+}
+
+/* ── CANVAS WRAP ── */
+.canvas-wrap {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ── PROFILE CARD ── */
+#profile-card {
+  background: #ffffff;
+  width: 860px;
+  min-width: 860px;
+  border: 1px solid #BBBBBB;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  font-family: var(--app-font);
+  transition: font-family 0.2s;
+}
+
+/* ── LEFT PANEL ── */
+.card-left {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* header strip */
+.left-header {
+  background: var(--c-accent);
+  padding: 16px 16px 14px;
+  border-bottom: 0;
+}
+.left-header-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 4px;
+}
+.left-header-title {
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+.left-header-sub {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.72rem;
+  margin-top: 3px;
+  letter-spacing: 0.06em;
+}
+
+/* name inputs inside header */
+.name-input-main {
+  background: transparent;
+  border: none; outline: none;
+  color: #fff;
+  font-family: var(--app-font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  width: 100%;
+  border-bottom: 1px dashed rgba(255,255,255,0.3);
+}
+.name-input-main::placeholder { color: rgba(255,255,255,0.3); }
+.name-input-sub {
+  background: transparent;
+  border: none; outline: none;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--app-font);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  width: 100%;
+  border-bottom: 1px dashed rgba(255,255,255,0.2);
+  margin-top: 4px;
+}
+.name-input-sub::placeholder { color: rgba(255,255,255,0.25); }
+
+/* avatar */
+.avatar-section {
+  padding: 14px;
+  border-bottom: 1px solid var(--c-border);
+}
+.avatar-zone {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: #f0f0f0;
+  border: 1px dashed #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+.avatar-zone:hover { border-color: #888; background: #e8e8e8; }
+.avatar-zone img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-upload-hint {
+  text-align: center;
+  color: #999;
+  font-size: 0.72rem;
+  line-height: 1.7;
+  pointer-events: none;
+}
+.avatar-upload-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+.avatar-change-btn {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 5px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-family: var(--app-font);
+}
+.avatar-zone:hover .avatar-change-btn { opacity: 1; }
+
+/* left meta items */
+.left-meta { padding: 0; flex: 1; }
+.meta-row {
+  display: flex;
+  border-bottom: 1px solid var(--c-border);
+  min-height: 32px;
+  align-items: stretch;
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-label {
+  width: 68px;
+  flex-shrink: 0;
+  font-size: 0.67rem;
+  letter-spacing: 0.06em;
+  color: var(--c-ui-dim);
+  background: #fafafa;
+  border-right: 1px solid var(--c-border);
+  display: flex; align-items: center;
+  padding: 6px 8px;
+  font-weight: 500;
+}
+.meta-value {
+  flex: 1;
+  display: flex; align-items: center;
+  padding: 4px 8px;
+}
+.meta-input {
+  background: transparent;
+  border: none; outline: none;
+  font-family: var(--app-font);
+  font-size: 0.78rem;
+  color: var(--c-ui);
+  width: 100%;
+  line-height: 1.5;
+}
+.meta-input::placeholder { color: #ccc; }
+
+/* ── RIGHT PANEL ── */
+.card-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 600px;
+  position: relative;
+}
+
+/* right header */
+.right-header {
+  border-bottom: 2px solid var(--c-accent);
+  padding: 14px 20px 12px;
+  display: flex; align-items: baseline; gap: 12px;
+}
+.right-header-title {
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-ui-dim);
+}
+.right-header-rule {
+  flex: 1; height: 1px; background: #e0e0e0;
+}
+.right-header-stamp {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--c-accent);
+  border: 1px solid var(--c-accent);
+  padding: 2px 8px;
+  font-weight: 600;
+}
+
+/* blocks area */
+.blocks-area {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.drop-empty {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.drop-empty-inner {
+  border: 2px dashed #ddd;
+  border-radius: 2px;
+  padding: 40px 60px;
+  text-align: center;
+  color: #bbb;
+  font-size: 0.8rem;
+  line-height: 2;
+  letter-spacing: 0.04em;
+}
+.drop-empty.hidden { display: none; }
+
+/* ── BLOCK ── */
+.profile-block {
+  border: 1px solid var(--c-border);
+  border-radius: 0;
+  margin-bottom: 10px;
+  position: relative;
+  cursor: grab;
+  transition: box-shadow 0.15s;
+  background: #fff;
+  z-index: 1;
+}
+.profile-block:hover { box-shadow: 0 0 0 2px var(--c-accent); }
+.profile-block.is-dragging { opacity: 0.4; }
+.profile-block.drag-over-top { border-top: 2px solid var(--c-accent); }
+.profile-block.drag-over-bot { border-bottom: 2px solid var(--c-accent); }
+
+.block-head {
+  display: flex; align-items: center;
+  background: var(--c-accent);
+  padding: 6px 10px 6px 12px;
+  gap: 8px;
+}
+.block-head-title {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+  flex: 1;
+}
+.block-del {
+  background: none; border: none;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.75rem; cursor: pointer;
+  padding: 2px 4px; line-height: 1;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+.block-del:hover { color: #fff; }
+.block-drag-handle {
+  color: rgba(255,255,255,0.3);
+  font-size: 0.7rem;
+  cursor: grab;
+  padding: 2px 4px;
+  letter-spacing: 0.05em;
+}
+
+.block-body { padding: 12px 14px; }
+
+/* ── BLOCK INNER STYLES ── */
+
+/* info table */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--c-border);
+  border-left: 1px solid var(--c-border);
+}
+.info-cell {
+  display: flex;
+  border-right: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border);
+  min-height: 30px;
+  align-items: stretch;
+}
+.info-cell.full { grid-column: 1 / -1; }
+.info-cell-label {
+  font-size: 0.67rem;
+  letter-spacing: 0.06em;
+  color: var(--c-ui-dim);
+  background: #fafafa;
+  border-right: 1px solid var(--c-border);
+  display: flex; align-items: center;
+  padding: 5px 8px;
+  width: 76px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.info-cell-val {
+  flex: 1; display: flex; align-items: center;
+  padding: 4px 8px;
+}
+.field-input {
+  background: transparent; border: none; outline: none;
+  font-family: var(--app-font);
+  font-size: 0.8rem; color: var(--c-ui);
+  width: 100%; line-height: 1.5;
+}
+.field-input::placeholder { color: #ccc; }
+.field-textarea {
+  background: transparent; border: none; outline: none;
+  font-family: var(--app-font);
+  font-size: 0.8rem; color: var(--c-ui);
+  width: 100%; line-height: 1.7;
+  resize: none;
+  padding: 2px 0;
+}
+.field-textarea::placeholder { color: #ccc; }
+
+/* text block */
+.text-block-body { line-height: 1.8; }
+
+/* likes/dislikes */
+.ld-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ld-col-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+.ld-like-label { color: #2a7a3a; }
+.ld-dis-label { color: #a02020; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid;
+  padding: 2px 10px;
+  font-size: 0.73rem;
+  border-radius: 0;
+}
+.tag-like { border-color: #2a7a3a; color: #2a7a3a; background: #f0faf2; }
+.tag-dis  { border-color: #a02020; color: #a02020; background: #fdf2f2; }
+.tag-remove { cursor: pointer; opacity: 0.5; }
+.tag-remove:hover { opacity: 1; }
+.tag-add {
+  background: none;
+  border: 1px dashed #ccc;
+  border-radius: 0;
+  padding: 2px 10px;
+  font-size: 0.73rem;
+  color: #aaa;
+  cursor: pointer;
+  font-family: var(--app-font);
+  transition: all 0.15s;
+}
+.tag-add:hover { border-color: #888; color: #666; }
+
+/* quote block */
+.quote-wrap {
+  border-left: 3px solid var(--c-accent);
+  padding: 6px 12px;
+}
+.quote-input {
+  background: transparent; border: none; outline: none;
+  font-family: var(--app-font);
+  font-size: 0.85rem; color: var(--c-ui);
+  width: 100%; line-height: 1.7;
+  font-style: italic;
+}
+.quote-input::placeholder { color: #ccc; font-style: italic; }
+.quote-source {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px;
+}
+.quote-dash { font-size: 0.75rem; color: #aaa; }
+.quote-src-input {
+  background: transparent; border: none; outline: none; border-bottom: 1px solid #e0e0e0;
+  font-family: var(--app-font); font-size: 0.75rem; color: #888; width: 100%;
+}
+.quote-src-input::placeholder { color: #ccc; }
+.song-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--c-border); }
+.song-label { font-size: 0.65rem; letter-spacing: 0.1em; color: var(--c-ui-dim); white-space: nowrap; }
+.song-input {
+  background: transparent; border: none; outline: none; border-bottom: 1px solid #e0e0e0;
+  font-family: var(--app-font); font-size: 0.78rem; color: var(--c-ui); flex: 1;
+}
+.song-input::placeholder { color: #ccc; }
+
+/* relations */
+.rels-list { display: flex; flex-direction: column; gap: 0; }
+.rel-row {
+  display: flex; align-items: center;
+  border: 1px solid var(--c-border);
+  border-top: none; gap: 0;
+}
+.rel-row:first-child { border-top: 1px solid var(--c-border); }
+.rel-idx {
+  width: 28px; flex-shrink: 0;
+  text-align: center;
+  font-size: 0.65rem; color: #aaa;
+  border-right: 1px solid var(--c-border);
+  padding: 8px 0;
+  align-self: stretch; display: flex; align-items: center; justify-content: center;
+  background: #fafafa;
+}
+.rel-name-input {
+  width: 100px; flex-shrink: 0;
+  background: transparent; border: none; outline: none; border-right: 1px solid var(--c-border);
+  font-family: var(--app-font); font-size: 0.78rem; font-weight: 500; color: var(--c-ui);
+  padding: 8px;
+}
+.rel-name-input::placeholder { color: #ccc; }
+.rel-type-input {
+  width: 80px; flex-shrink: 0;
+  background: transparent; border: none; outline: none; border-right: 1px solid var(--c-border);
+  font-family: var(--app-font); font-size: 0.72rem; color: var(--c-ui-dim);
+  padding: 8px;
+}
+.rel-type-input::placeholder { color: #ccc; }
+.rel-desc-input {
+  flex: 1;
+  background: transparent; border: none; outline: none;
+  font-family: var(--app-font); font-size: 0.75rem; color: var(--c-ui);
+  padding: 8px;
+}
+.rel-desc-input::placeholder { color: #ccc; }
+.rel-del { background: none; border: none; color: #ccc; font-size: 0.75rem; cursor: pointer; padding: 8px 8px; }
+.rel-del:hover { color: #a00; }
+.rel-add-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: #fafafa; border: 1px dashed #ccc;
+  border-top: none;
+  width: 100%;
+  padding: 7px 12px;
+  font-family: var(--app-font); font-size: 0.73rem; color: #aaa;
+  cursor: pointer; transition: all 0.15s;
+}
+.rel-add-btn:hover { border-color: #888; color: #666; background: #f0f0f0; }
+
+/* image block */
+.img-block-zone {
+  border: 1px dashed #ccc;
+  min-height: 120px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden; position: relative;
+  transition: border-color 0.2s, background 0.2s;
+  font-size: 0.75rem; color: #bbb; gap: 6px;
+  text-align: center; line-height: 1.6;
+}
+.img-block-zone:hover { border-color: #888; background: #f8f8f8; }
+.img-block-zone img { max-width: 100%; max-height: 300px; object-fit: contain; display: block; }
+.img-change-btn {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.5); color: #fff; font-size: 0.7rem;
+  text-align: center; padding: 5px;
+  opacity: 0; transition: opacity 0.2s;
+  font-family: var(--app-font);
+}
+.img-block-zone:hover .img-change-btn { opacity: 1; }
+
+/* ── EXPORT MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 500;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff;
+  border: 2px solid var(--c-ui);
+  padding: 32px 36px;
+  max-width: 440px; width: 90%;
+  text-align: center;
+}
+.modal-title {
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.modal-sub { font-size: 0.75rem; color: #777; margin-bottom: 20px; line-height: 1.6; }
+.modal-preview { max-width: 100%; border: 1px solid #ddd; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 8px; justify-content: center; }
+.btn-primary {
+  padding: 9px 24px;
+  background: var(--c-ui); color: #fff;
+  border: none; cursor: pointer;
+  font-family: var(--app-font); font-size: 0.8rem; font-weight: 600;
+  letter-spacing: 0.05em; transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.8; }
+.btn-secondary {
+  padding: 9px 20px;
+  background: transparent; color: var(--c-ui-dim);
+  border: 1px solid var(--c-border); cursor: pointer;
+  font-family: var(--app-font); font-size: 0.8rem;
+  transition: all 0.15s;
+}
+.btn-secondary:hover { border-color: var(--c-ui); color: var(--c-ui); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--c-ui); color: #fff;
+  padding: 9px 22px; font-size: 0.78rem;
+  border-radius: 2px; z-index: 9999;
+  opacity: 0; transition: opacity 0.25s;
+  pointer-events: none; letter-spacing: 0.04em;
+}
+.toast.show { opacity: 1; }
+
+/* ── DRAG OVER CANVAS BACKGROUND ── */
+.blocks-area.drag-active { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-brand">CHARACTER PROFILE</div>
+
+    <div class="topbar-section">
+      <span class="topbar-label">폰트</span>
+      <div class="font-select-wrap">
+        <select class="font-select" id="font-select" onchange="changeFont(this.value)">
+          <option value="'Pretendard', 'Noto Sans KR', sans-serif">Pretendard</option>
+          <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+          <option value="'Noto Serif KR', serif">Noto Serif KR</option>
+          <option value="'Gowun Dodum', sans-serif">고운돋움</option>
+          <option value="'Gaegu', cursive">개구</option>
+          <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+        </select>
+        <span class="font-select-arrow">▾</span>
+      </div>
+    </div>
+
+    <div class="topbar-section">
+      <span class="topbar-label">포인트 색상</span>
+      <div class="accent-swatches" id="accent-swatches">
+        <div class="accent-swatch active" style="background:#1A1A1A" data-color="#1A1A1A" title="블랙"></div>
+        <div class="accent-swatch" style="background:#1A3A6A" data-color="#1A3A6A" title="네이비"></div>
+        <div class="accent-swatch" style="background:#6A1A1A" data-color="#6A1A1A" title="버건디"></div>
+        <div class="accent-swatch" style="background:#1A5A3A" data-color="#1A5A3A" title="다크그린"></div>
+        <div class="accent-swatch" style="background:#5A3A1A" data-color="#5A3A1A" title="브라운"></div>
+        <div class="accent-swatch" style="background:#4A1A6A" data-color="#4A1A6A" title="퍼플"></div>
+      </div>
+    </div>
+
+    <div class="topbar-section">
+      <span class="topbar-label">카드 크기</span>
+      <div class="size-control">
+        <button class="size-btn" onclick="resizeCard(-40)" title="축소">−</button>
+        <span class="size-display" id="size-display">860px</span>
+        <button class="size-btn" onclick="resizeCard(40)" title="확대">＋</button>
+      </div>
+    </div>
+
+    <div class="topbar-spacer"></div>
+    <button class="btn-reset" onclick="resetAll()">초기화</button>
+    <button class="btn-export" onclick="doExport()">이미지로 저장 ↓</button>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor-layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section-title">블록 추가</div>
+
+      <div class="palette-item" draggable="true" data-block="info">
+        <span class="palette-icon">📋</span>
+        <div>
+          <div>기본 정보</div>
+          <div class="palette-desc">이름·나이·성별 등</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="appearance">
+        <span class="palette-icon">🪞</span>
+        <div>
+          <div>외모 설명</div>
+          <div class="palette-desc">눈·머리·피부 등</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="image">
+        <span class="palette-icon">🖼️</span>
+        <div>
+          <div>이미지</div>
+          <div class="palette-desc">원하는 이미지 업로드</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="personality">
+        <span class="palette-icon">💭</span>
+        <div>
+          <div>성격</div>
+          <div class="palette-desc">성격·특성·말투</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="backstory">
+        <span class="palette-icon">📖</span>
+        <div>
+          <div>배경 스토리</div>
+          <div class="palette-desc">과거·세계관</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="likes">
+        <span class="palette-icon">⊕</span>
+        <div>
+          <div>좋아하는 것/싫어하는 것</div>
+          <div class="palette-desc">태그 방식</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="quote">
+        <span class="palette-icon">❝</span>
+        <div>
+          <div>명대사 / 테마곡</div>
+          <div class="palette-desc">인용·음악</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="relations">
+        <span class="palette-icon">↔</span>
+        <div>
+          <div>관계도</div>
+          <div class="palette-desc">다른 캐릭터와의 관계</div>
+        </div>
+      </div>
+      <div class="palette-item" draggable="true" data-block="custom">
+        <span class="palette-icon">✎</span>
+        <div>
+          <div>자유 텍스트</div>
+          <div class="palette-desc">직접 제목 설정</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="canvas-wrap">
+      <div id="profile-card">
+
+        <!-- LEFT -->
+        <div class="card-left">
+          <div class="left-header">
+            <div class="left-header-label">Character Profile</div>
+            <input class="name-input-main" id="char-name" type="text" placeholder="캐릭터 이름" autocomplete="off">
+            <input class="name-input-sub" id="char-codename" type="text" placeholder="코드네임 (선택)" autocomplete="off">
+          </div>
+
+          <div class="avatar-section">
+            <div class="avatar-zone" id="avatar-zone" onclick="document.getElementById('avatar-file').click()">
+              <span class="avatar-upload-icon">＋</span>
+              <div class="avatar-upload-hint">클릭하여<br>이미지 업로드</div>
+              <div class="avatar-change-btn">이미지 변경</div>
+            </div>
+            <input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="loadAvatar(event)">
+          </div>
+
+          <div class="left-meta" id="left-meta">
+            <div class="meta-row">
+              <div class="meta-label">나이</div>
+              <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">성별</div>
+              <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">종족</div>
+              <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">직업</div>
+              <div class="meta-value"><input class="meta-input" type="text" placeholder="—" autocomplete="off"></div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">키</div>
+              <div class="meta-value"><input class="meta-input" type="text" placeholder="— cm" autocomplete="off"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="card-right">
+          <div class="right-header">
+            <span class="right-header-title">Profile Overview</span>
+            <div class="right-header-rule"></div>
+            <span class="right-header-stamp">CHARACTER</span>
+          </div>
+          <div class="blocks-area" id="blocks-area">
+            <div class="drop-empty" id="drop-empty">
+              <div class="drop-empty-inner">
+                왼쪽 사이드바에서 블록을 드래그하여<br>이곳에 놓아 소개 틀을 완성하세요
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /profile-card -->
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">이미지 저장</div>
+    <div class="modal-sub">아래 이미지를 확인하고 다운로드 버튼을 누르세요.</div>
+    <img class="modal-preview" id="modal-preview" src="" alt="">
+    <div class="modal-actions">
+      <a id="modal-dl-link" download="character-profile.png">
+        <button class="btn-primary" id="modal-dl-btn">PNG 다운로드</button>
+      </a>
+      <button class="btn-secondary" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ──────────────────────────────
+   UTILITIES
+────────────────────────────── */
+function toast(msg, ms = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* ──────────────────────────────
+   FONT
+────────────────────────────── */
+function changeFont(val) {
+  document.documentElement.style.setProperty('--app-font', val);
+  document.getElementById('profile-card').style.fontFamily = val;
+}
+
+/* ──────────────────────────────
+   ACCENT COLOR
+────────────────────────────── */
+document.getElementById('accent-swatches').addEventListener('click', e => {
+  const sw = e.target.closest('.accent-swatch');
+  if (!sw) return;
+  document.querySelectorAll('.accent-swatch').forEach(s => s.classList.remove('active'));
+  sw.classList.add('active');
+  const color = sw.dataset.color;
+  document.documentElement.style.setProperty('--c-accent', color);
+  document.documentElement.style.setProperty('--c-badge', color);
+});
+
+/* ──────────────────────────────
+   CARD SIZE
+────────────────────────────── */
+let cardWidth = 860;
+function resizeCard(delta) {
+  cardWidth = Math.max(640, Math.min(1200, cardWidth + delta));
+  const card = document.getElementById('profile-card');
+  card.style.width = cardWidth + 'px';
+  card.style.minWidth = cardWidth + 'px';
+  document.getElementById('size-display').textContent = cardWidth + 'px';
+}
+
+/* ──────────────────────────────
+   AVATAR
+────────────────────────────── */
+function loadAvatar(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const zone = document.getElementById('avatar-zone');
+  zone.innerHTML = `<img src="${url}" alt="프로필 이미지"><div class="avatar-change-btn">이미지 변경</div>`;
+  zone.onclick = () => document.getElementById('avatar-file').click();
+  e.target.value = '';
+}
+
+/* ──────────────────────────────
+   BLOCK SYSTEM
+────────────────────────────── */
+let dragSrc = null;   // block being dragged (reorder)
+let paletteType = null; // new block from sidebar
+let blockSeq = 0;
+
+const BLOCKS = {
+  info: {
+    title: 'BASIC INFORMATION',
+    build: (id) => `
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-cell-label">이름</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">나이</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">성별</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">종족</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">직업</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">키 / 몸무게</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="— cm / — kg" autocomplete="off"></div>
+        </div>
+        <div class="info-cell full">
+          <div class="info-cell-label">출생지</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+      </div>`
+  },
+  appearance: {
+    title: 'APPEARANCE',
+    build: (id) => `
+      <div class="info-grid">
+        <div class="info-cell">
+          <div class="info-cell-label">눈 색</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">머리 색</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">머리 길이</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell">
+          <div class="info-cell-label">피부색</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="—" autocomplete="off"></div>
+        </div>
+        <div class="info-cell full">
+          <div class="info-cell-label">특징</div>
+          <div class="info-cell-val"><input class="field-input" placeholder="흉터, 점, 문신, 특이사항 등" autocomplete="off"></div>
+        </div>
+        <div class="info-cell full" style="align-items:flex-start">
+          <div class="info-cell-label" style="padding-top:8px">외모 묘사</div>
+          <div class="info-cell-val"><textarea class="field-textarea" rows="3" placeholder="자세한 외모 묘사를 작성하세요."></textarea></div>
+        </div>
+      </div>`
+  },
+  image: {
+    title: 'IMAGE',
+    build: (id) => `
+      <div class="img-block-zone" id="imgzone-${id}" onclick="document.getElementById('imgfile-${id}').click()">
+        <span style="font-size:1.5rem">＋</span>
+        <span>클릭하여 이미지 업로드</span>
+        <div class="img-change-btn">이미지 변경</div>
+      </div>
+      <input type="file" id="imgfile-${id}" accept="image/*" style="display:none"
+        onchange="loadBlockImg(event,'${id}')">`
+  },
+  personality: {
+    title: 'PERSONALITY',
+    build: (id) => `
+      <textarea class="field-textarea" rows="5" style="width:100%;padding:4px 0;border:none;outline:none;"
+        placeholder="캐릭터의 성격, 특성, 말투, 가치관 등을 서술하세요."></textarea>`
+  },
+  backstory: {
+    title: 'BACKSTORY',
+    build: (id) => `
+      <textarea class="field-textarea" rows="6" style="width:100%;padding:4px 0;border:none;outline:none;"
+        placeholder="캐릭터의 과거, 배경, 세계관 내 위치 등을 서술하세요."></textarea>`
+  },
+  likes: {
+    title: 'LIKES & DISLIKES',
+    build: (id) => `
+      <div class="ld-grid">
+        <div>
+          <div class="ld-col-label ld-like-label">LIKES</div>
+          <div class="tag-list" id="likes-${id}"></div>
+          <button class="tag-add" onclick="addTag('${id}','like')">+ 추가</button>
+        </div>
+        <div>
+          <div class="ld-col-label ld-dis-label">DISLIKES</div>
+          <div class="tag-list" id="dislikes-${id}"></div>
+          <button class="tag-add" onclick="addTag('${id}','dis')">+ 추가</button>
+        </div>
+      </div>`
+  },
+  quote: {
+    title: 'QUOTE & THEME',
+    build: (id) => `
+      <div class="quote-wrap">
+        <input class="quote-input" type="text" placeholder="캐릭터의 명대사를 입력하세요." autocomplete="off">
+        <div class="quote-source">
+          <span class="quote-dash">—</span>
+          <input class="quote-src-input" type="text" placeholder="출처 / 상황" autocomplete="off">
+        </div>
+      </div>
+      <div class="song-row">
+        <span class="song-label">THEME</span>
+        <input class="song-input" type="text" placeholder="테마곡 / 플레이리스트" autocomplete="off">
+      </div>`
+  },
+  relations: {
+    title: 'RELATIONSHIPS',
+    build: (id) => `
+      <div class="rels-list" id="rels-${id}"></div>
+      <button class="rel-add-btn" onclick="addRelation('${id}')">＋ 관계 추가</button>`
+  },
+  custom: {
+    title: 'CUSTOM',
+    build: (id) => `
+      <textarea class="field-textarea" rows="4" style="width:100%;padding:4px 0;border:none;outline:none;"
+        placeholder="내용을 자유롭게 입력하세요."></textarea>`
+  }
+};
+
+function makeBlock(type) {
+  const def = BLOCKS[type];
+  if (!def) return null;
+  const id = 'b' + (++blockSeq);
+  const wrap = document.createElement('div');
+  wrap.className = 'profile-block';
+  wrap.id = id;
+  wrap.draggable = true;
+  wrap.dataset.type = type;
+
+  // custom title editable
+  const titleHtml = type === 'custom'
+    ? `<input class="block-head-title" type="text" value="CUSTOM" style="background:transparent;border:none;outline:none;color:rgba(255,255,255,0.85);font-family:var(--app-font);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;width:100%;" autocomplete="off">`
+    : `<span class="block-head-title">${def.title}</span>`;
+
+  wrap.innerHTML = `
+    <div class="block-head">
+      <span class="block-drag-handle">⠿</span>
+      ${titleHtml}
+      <button class="block-del" onclick="delBlock('${id}')">✕</button>
+    </div>
+    <div class="block-body">${def.build(id)}</div>
+  `;
+
+  attachBlockDrag(wrap);
+  return wrap;
+}
+
+function delBlock(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  updateEmpty();
+}
+
+function updateEmpty() {
+  const area = document.getElementById('blocks-area');
+  const hint = document.getElementById('drop-empty');
+  const hasBlocks = area.querySelectorAll('.profile-block').length > 0;
+  hint.classList.toggle('hidden', hasBlocks);
+}
+
+/* ─ drag ─ */
+function attachBlockDrag(el) {
+  el.addEventListener('dragstart', e => {
+    dragSrc = el;
+    paletteType = null;
+    setTimeout(() => el.classList.add('is-dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+    e.stopPropagation();
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('is-dragging');
+    document.querySelectorAll('.profile-block').forEach(b => {
+      b.classList.remove('drag-over-top', 'drag-over-bot');
+    });
+    dragSrc = null;
+  });
+  el.addEventListener('dragover', e => {
+    e.preventDefault(); e.stopPropagation();
+    if (!dragSrc && !paletteType) return;
+    if (dragSrc === el) return;
+    const rect = el.getBoundingClientRect();
+    const mid = rect.top + rect.height / 2;
+    document.querySelectorAll('.profile-block').forEach(b => b.classList.remove('drag-over-top','drag-over-bot'));
+    if (e.clientY < mid) el.classList.add('drag-over-top');
+    else el.classList.add('drag-over-bot');
+  });
+  el.addEventListener('dragleave', () => {
+    el.classList.remove('drag-over-top', 'drag-over-bot');
+  });
+  el.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation();
+    const area = document.getElementById('blocks-area');
+    const isTop = el.classList.contains('drag-over-top');
+    el.classList.remove('drag-over-top', 'drag-over-bot');
+
+    if (paletteType) {
+      const newB = makeBlock(paletteType);
+      if (!newB) return;
+      if (isTop) area.insertBefore(newB, el);
+      else el.insertAdjacentElement('afterend', newB);
+    } else if (dragSrc && dragSrc !== el) {
+      if (isTop) area.insertBefore(dragSrc, el);
+      else el.insertAdjacentElement('afterend', dragSrc);
+    }
+    paletteType = null;
+    updateEmpty();
+  });
+}
+
+// palette drag
+document.querySelectorAll('.palette-item').forEach(item => {
+  item.addEventListener('dragstart', e => {
+    paletteType = item.dataset.block;
+    dragSrc = null;
+    e.dataTransfer.effectAllowed = 'copy';
+  });
+  item.addEventListener('dragend', () => { paletteType = null; });
+  // click to add at bottom
+  item.addEventListener('click', () => {
+    const newB = makeBlock(item.dataset.block);
+    if (!newB) return;
+    document.getElementById('blocks-area').appendChild(newB);
+    updateEmpty();
+    toast('블록을 추가했습니다.');
+  });
+});
+
+// drop on background
+const blocksArea = document.getElementById('blocks-area');
+blocksArea.addEventListener('dragover', e => {
+  e.preventDefault();
+  blocksArea.classList.add('drag-active');
+});
+blocksArea.addEventListener('dragleave', e => {
+  if (!blocksArea.contains(e.relatedTarget))
+    blocksArea.classList.remove('drag-active');
+});
+blocksArea.addEventListener('drop', e => {
+  e.preventDefault();
+  blocksArea.classList.remove('drag-active');
+  // only if dropped directly on area (not on a block)
+  if (e.target !== blocksArea && !e.target.classList.contains('drop-empty') && !e.target.classList.contains('drop-empty-inner')) return;
+  if (!paletteType) return;
+  const newB = makeBlock(paletteType);
+  if (newB) blocksArea.appendChild(newB);
+  paletteType = null;
+  updateEmpty();
+});
+
+/* ─ TAGS ─ */
+function addTag(blockId, type) {
+  const val = prompt(type === 'like' ? '좋아하는 것:' : '싫어하는 것:');
+  if (!val || !val.trim()) return;
+  const listId = (type === 'like' ? 'likes-' : 'dislikes-') + blockId;
+  const list = document.getElementById(listId);
+  const tag = document.createElement('span');
+  tag.className = 'tag ' + (type === 'like' ? 'tag-like' : 'tag-dis');
+  tag.innerHTML = `${val.trim()} <span class="tag-remove" onclick="this.parentElement.remove()">×</span>`;
+  list.appendChild(tag);
+}
+
+/* ─ RELATIONS ─ */
+function addRelation(blockId) {
+  const list = document.getElementById('rels-' + blockId);
+  const idx = list.children.length + 1;
+  const row = document.createElement('div');
+  row.className = 'rel-row';
+  row.innerHTML = `
+    <div class="rel-idx">${idx}</div>
+    <input class="rel-name-input" type="text" placeholder="캐릭터 이름" autocomplete="off">
+    <input class="rel-type-input" type="text" placeholder="관계 유형" autocomplete="off">
+    <input class="rel-desc-input" type="text" placeholder="관계 설명" autocomplete="off">
+    <button class="rel-del" onclick="this.parentElement.remove(); renumberRels('${blockId}')">✕</button>
+  `;
+  list.appendChild(row);
+}
+function renumberRels(blockId) {
+  const rows = document.querySelectorAll(`#rels-${blockId} .rel-row`);
+  rows.forEach((r, i) => { const idx = r.querySelector('.rel-idx'); if(idx) idx.textContent = i+1; });
+}
+
+/* ─ IMAGE BLOCK ─ */
+function loadBlockImg(e, blockId) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const zone = document.getElementById('imgzone-' + blockId);
+  zone.innerHTML = `<img src="${url}" alt="이미지"><div class="img-change-btn">이미지 변경</div>`;
+  zone.onclick = () => document.getElementById('imgfile-' + blockId).click();
+  e.target.value = '';
+}
+
+/* ──────────────────────────────
+   RESET
+────────────────────────────── */
+function resetAll() {
+  if (!confirm('모든 내용을 초기화할까요?')) return;
+  document.querySelectorAll('.profile-block').forEach(b => b.remove());
+  document.getElementById('char-name').value = '';
+  document.getElementById('char-codename').value = '';
+  document.getElementById('avatar-zone').innerHTML = `
+    <span class="avatar-upload-icon">＋</span>
+    <div class="avatar-upload-hint">클릭하여<br>이미지 업로드</div>
+    <div class="avatar-change-btn">이미지 변경</div>`;
+  document.getElementById('avatar-zone').onclick = () => document.getElementById('avatar-file').click();
+  document.querySelectorAll('.meta-input').forEach(i => i.value = '');
+  updateEmpty();
+  toast('초기화했습니다.');
+}
+
+/* ──────────────────────────────
+   EXPORT
+────────────────────────────── */
+async function doExport() {
+  toast('이미지 생성 중…');
+  const card = document.getElementById('profile-card');
+
+  // snapshot block controls visibility
+  const controls = card.querySelectorAll('.block-head .block-del, .block-head .block-drag-handle, .rel-del, .rel-add-btn, .tag-add, .tag-remove, .img-change-btn, .avatar-change-btn');
+  controls.forEach(el => { el._prevDisplay = el.style.display; el.style.display = 'none'; });
+
+  try {
+    const cvs = await html2canvas(card, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+      onclone: (doc) => {
+        // make textareas visible in clone
+        doc.querySelectorAll('textarea').forEach(ta => {
+          const div = doc.createElement('div');
+          div.style.cssText = ta.style.cssText + ';white-space:pre-wrap;font-family:inherit;font-size:inherit;color:inherit;line-height:1.7;';
+          div.textContent = ta.value || ta.placeholder;
+          if (!ta.value) div.style.color = '#ccc';
+          ta.parentNode.replaceChild(div, ta);
+        });
+      }
+    });
+    const dataUrl = cvs.toDataURL('image/png');
+    document.getElementById('modal-preview').src = dataUrl;
+    document.getElementById('modal-dl-link').href = dataUrl;
+    document.getElementById('modal-overlay').classList.add('open');
+  } catch(err) {
+    toast('오류가 발생했습니다. 다시 시도해주세요.');
+    console.error(err);
+  } finally {
+    controls.forEach(el => { el.style.display = el._prevDisplay || ''; });
+  }
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+updateEmpty();
+</script>
+</body>
+</html>
