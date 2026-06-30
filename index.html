@@ -569,8 +569,8 @@ body {
   background: #fafafa;
   border-right: 1px solid var(--c-border);
   display: flex; align-items: center; justify-content: center;
-  padding: 5px 8px;
-  width: 76px;
+  padding: 5px 6px;
+  width: 92px;
   flex-shrink: 0;
   font-weight: 500;
   text-align: center;
@@ -1618,9 +1618,18 @@ async function doExport() {
   const controls = card.querySelectorAll('.block-del,.block-drag-handle,.block-resize-handle,.rel-del,.rel-add-btn,.tag-add,.tag-remove,.img-change-btn,.avatar-change-btn');
   controls.forEach(el => { el._pd = el.style.display; el.style.display = 'none'; });
 
+  // remove the responsive "fit to screen" scale transform so html2canvas
+  // always captures the card at its true, full resolution (not the
+  // shrunk-down on-screen size used on narrow/mobile viewports)
+  const wrap = document.querySelector('.canvas-wrap');
+  const prevCardTransform = card.style.transform;
+  const prevWrapMinHeight = wrap ? wrap.style.minHeight : '';
+  card.style.transform = '';
+  if (wrap) wrap.style.minHeight = '';
+
   try {
     const cvs = await html2canvas(card, {
-      scale: 2,
+      scale: 4,
       backgroundColor: '#ffffff',
       useCORS: true,
       allowTaint: true,
@@ -1771,6 +1780,8 @@ async function doExport() {
     console.error(err);
   } finally {
     controls.forEach(el => { el.style.display = el._pd || ''; });
+    card.style.transform = prevCardTransform;
+    if (wrap) wrap.style.minHeight = prevWrapMinHeight;
   }
 }
 function closeModal() {
