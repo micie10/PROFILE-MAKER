@@ -1629,7 +1629,7 @@ async function doExport() {
 
   try {
     const cvs = await html2canvas(card, {
-      scale: 4,
+      scale: 6,
       backgroundColor: '#ffffff',
       useCORS: true,
       allowTaint: true,
@@ -1738,6 +1738,56 @@ async function doExport() {
               `text-transform:${cs.textTransform}`,
               'display:inline',
               'white-space:nowrap',
+            ].join(';');
+            span.textContent = val || inp.placeholder || '';
+          } else if (inp.classList.contains('rel-name-input') || inp.classList.contains('rel-type-input')) {
+            // Relationship row "name"/"type" cells: fixed-width columns
+            // with a right border acting as the divider line between
+            // cells. The catch-all branch below stretches everything to
+            // width:100% and drops border/padding, which both collapses
+            // the column layout (misaligned text) and removes the divider
+            // lines. Pin the real on-screen width and keep the border.
+            const relRect = (orig || inp).getBoundingClientRect();
+            span.style.cssText = [
+              `font-family:${appFont}`,
+              `font-size:${cs.fontSize}`,
+              `font-weight:${cs.fontWeight}`,
+              `color:${val ? cs.color : '#cccccc'}`,
+              `letter-spacing:${cs.letterSpacing}`,
+              'display:flex',
+              'align-items:center',
+              'align-self:stretch',
+              'box-sizing:border-box',
+              `width:${relRect.width}px`,
+              `min-width:${relRect.width}px`,
+              `max-width:${relRect.width}px`,
+              'flex-shrink:0',
+              'padding:8px',
+              'border-right:1px solid #ccc',
+              'white-space:nowrap',
+              'overflow:hidden',
+              'text-overflow:ellipsis',
+            ].join(';');
+            span.textContent = val || inp.placeholder || '';
+          } else if (inp.classList.contains('rel-desc-input')) {
+            // Relationship row "description" cell: flexes to fill the
+            // remaining row width, same fix pattern as above but no fixed
+            // width/border since it's the last (unbordered) column.
+            span.style.cssText = [
+              `font-family:${appFont}`,
+              `font-size:${cs.fontSize}`,
+              `color:${val ? cs.color : '#cccccc'}`,
+              `letter-spacing:${cs.letterSpacing}`,
+              'display:flex',
+              'align-items:center',
+              'align-self:stretch',
+              'box-sizing:border-box',
+              'flex:1',
+              'min-width:0',
+              'padding:8px',
+              'white-space:pre-wrap',
+              'word-break:break-word',
+              'overflow-wrap:break-word',
             ].join(';');
             span.textContent = val || inp.placeholder || '';
           } else {
