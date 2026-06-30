@@ -882,6 +882,53 @@ body {
   padding: 0 8px !important;
   font-size: 0.78rem;
 }
+
+/* ══════════════════════════════
+   MOBILE / TABLET RESPONSIVE
+   ══════════════════════════════ */
+@media (max-width: 1024px) {
+  .editor-layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--c-border);
+    padding: 10px 12px;
+    overflow-x: auto;
+    overflow-y: visible;
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .sidebar-section-title { display: none; }
+  .palette-item {
+    flex: 0 0 auto;
+    min-width: 110px;
+    margin-bottom: 0;
+  }
+  .canvas-wrap {
+    padding: 16px 8px 40px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar { height: auto; flex-wrap: wrap; }
+  .topbar-brand { font-size: 0.75rem; padding: 0 14px; height: 44px; }
+  .topbar-section { padding: 8px 12px; height: auto; }
+  .topbar-spacer { display: none; }
+  .btn-export, .btn-reset { margin: 6px; }
+
+  /* Let the (fixed-width) card scale visually to fit the screen */
+  .canvas-wrap { justify-content: flex-start; width: 100%; }
+  #profile-card { transform-origin: top left; }
+}
+
+@media (max-width: 480px) {
+  .topbar-label { display: none; }
+  .topbar-section { gap: 6px; padding: 8px; }
+  .font-select { font-size: 0.72rem; padding: 5px 22px 5px 8px; }
+  .btn-export { padding: 8px 14px; font-size: 0.72rem; }
+}
 </style>
 </head>
 <body>
@@ -1793,6 +1840,37 @@ ${clone.outerHTML}
 }
 
 updateEmpty();
+
+/* ──────────────────────────────
+   RESPONSIVE CARD SCALING
+   (card has a JS-controlled fixed px width, so scale it
+   visually to fit narrow screens instead of letting it overflow)
+────────────────────────────── */
+function fitCardToScreen() {
+  const card = document.getElementById('profile-card');
+  const wrap = document.querySelector('.canvas-wrap');
+  if (!card || !wrap) return;
+  const available = wrap.clientWidth - 16; // small side margin
+  const natural = card.offsetWidth / (parseFloat(card.dataset.scale) || 1) || card.offsetWidth;
+  // measure the card's true unscaled width
+  card.style.transform = '';
+  const trueWidth = card.scrollWidth;
+  if (available < trueWidth) {
+    const scale = Math.max(0.35, available / trueWidth);
+    card.style.transform = `scale(${scale})`;
+    card.dataset.scale = scale;
+    wrap.style.minHeight = (card.scrollHeight * scale) + 'px';
+  } else {
+    card.style.transform = '';
+    wrap.style.minHeight = '';
+  }
+}
+window.addEventListener('resize', fitCardToScreen);
+window.addEventListener('load', fitCardToScreen);
+// re-check after font/size/content changes
+const _fitObserver = new MutationObserver(() => fitCardToScreen());
+_fitObserver.observe(document.getElementById('profile-card'), { childList: true, subtree: true, attributes: true });
+setTimeout(fitCardToScreen, 50);
 </script>
 </body>
 </html>
