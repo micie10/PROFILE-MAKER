@@ -1608,6 +1608,35 @@ function resetAll() {
 /* ──────────────────────────────
    EXPORT
 ────────────────────────────── */
+
+// Replicates CSS `object-fit: cover; object-position: center;` by
+// drawing the source image into a canvas sized exactly targetW×targetH.
+// Used to pre-bake avatar/img-block photos at full export resolution
+// before html2canvas captures them (see onclone in doExport below).
+function cropImageToCoverBox(srcDataUrl, targetW, targetH) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.max(targetW / img.naturalWidth, targetH / img.naturalHeight);
+      const dW = img.naturalWidth * scale;
+      const dH = img.naturalHeight * scale;
+      const dX = (targetW - dW) / 2;
+      const dY = (targetH - dH) / 2;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, dX, dY, dW, dH);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = srcDataUrl;
+  });
+}
+
 async function doExport() {
   toast('이미지 생성 중…');
   const card = document.getElementById('profile-card');
@@ -1627,15 +1656,44 @@ async function doExport() {
   card.style.transform = '';
   if (wrap) wrap.style.minHeight = '';
 
+  // Choose an export scale that keeps the final canvas within safe
+  // browser/GPU limits. A fixed high scale (e.g. 6) can silently get
+  // clamped or downsampled by the browser once card size × scale
+  // exceeds its max canvas dimension/area, which ironically produces a
+  // BLURRIER result than a lower, safe scale would. We pick the largest
+  // scale (up to a desired max) that keeps both the longest side and the
+  // total pixel area under conservative limits (mobile Safari in
+  // particular caps canvas area around ~16.7M px / ~4096px per side).
+  const DESIRED_SCALE = 6;
+  const MAX_DIMENSION_PX = 4096;   // longest side cap
+  const MAX_AREA_PX = 16000000;    // ~16MP cap, safe margin under mobile limits
+  const trueRect = card.getBoundingClientRect();
+  const trueW = trueRect.width;
+  const trueH = trueRect.height;
+
+  let exportScale = DESIRED_SCALE;
+  exportScale = Math.min(exportScale, MAX_DIMENSION_PX / trueW, MAX_DIMENSION_PX / trueH);
+  if (trueW * trueH * exportScale * exportScale > MAX_AREA_PX) {
+    exportScale = Math.sqrt(MAX_AREA_PX / (trueW * trueH));
+  }
+  exportScale = Math.max(1, Math.min(DESIRED_SCALE, exportScale));
+
+  if (exportScale < DESIRED_SCALE) {
+    console.warn(
+      `[export] card is large (${Math.round(trueW)}x${Math.round(trueH)}px); ` +
+      `reduced scale from ${DESIRED_SCALE} to ${exportScale.toFixed(2)} to stay within safe canvas limits.`
+    );
+  }
+
   try {
     const cvs = await html2canvas(card, {
-      scale: 6,
+      scale: exportScale,
       backgroundColor: '#ffffff',
       useCORS: true,
       allowTaint: true,
       logging: false,
       imageTimeout: 0,
-      onclone: (doc, clonedCard) => {
+      onclone: async (doc, clonedCard) => {
         // Inject CSS variable values directly so html2canvas picks them up
         const styleEl = doc.createElement('style');
         styleEl.textContent = `:root { --c-accent: ${accentColor}; --c-badge: ${accentColor}; --app-font: ${appFont}; }`;
@@ -1643,23 +1701,34 @@ async function doExport() {
 
         clonedCard.style.fontFamily = appFont;
 
-        // html2canvas frequently mishandles object-fit:cover on <img>,
-        // rendering it stretched/squished instead of cropped. Convert
-        // those images to background-image divs (background-size:cover),
-        // which html2canvas renders correctly.
-        clonedCard.querySelectorAll('.avatar-zone img, .img-block-zone img').forEach(img => {
-          const div = doc.createElement('div');
-          div.style.cssText = [
-            'width:100%',
-            'height:100%',
-            `background-image:url('${img.src}')`,
-            'background-size:cover',
-            'background-position:center',
-            'background-repeat:no-repeat',
-            'display:block',
-          ].join(';');
-          img.parentNode.replaceChild(div, img);
-        });
+        // html2canvas mishandles object-fit:cover on <img> (renders it
+        // stretched/squished instead of cropped). The previous fix swapped
+        // these <img>s for CSS background-image divs, which crop correctly
+        // BUT html2canvas has a known limitation where background-images
+        // are rasterized at a fixed low resolution regardless of the
+        // "scale" option — that was the real source of the blurry export,
+        // not canvas size. Instead, pre-render each image into an
+        // offscreen canvas at its *exact final export resolution*
+        // (on-screen box size × exportScale) doing the cover-crop
+        // ourselves, then swap in a plain <img> pointing at that
+        // already-cropped, already-correctly-sized bitmap. html2canvas
+        // draws plain <img> elements at full scale/quality, so this keeps
+        // both the correct crop AND full resolution.
+        const imgEls = Array.from(clonedCard.querySelectorAll('.avatar-zone img, .img-block-zone img'));
+        await Promise.all(imgEls.map(async (img) => {
+          const box = img.getBoundingClientRect();
+          const targetW = Math.max(1, Math.round(box.width * exportScale));
+          const targetH = Math.max(1, Math.round(box.height * exportScale));
+          try {
+            const croppedDataUrl = await cropImageToCoverBox(img.src, targetW, targetH);
+            const newImg = doc.createElement('img');
+            newImg.src = croppedDataUrl;
+            newImg.style.cssText = 'width:100%;height:100%;display:block;';
+            img.parentNode.replaceChild(newImg, img);
+          } catch (e) {
+            console.error('image crop for export failed, leaving as-is', e);
+          }
+        }));
 
         // Replace textarea with div (html2canvas can't render textarea content reliably)
         clonedCard.querySelectorAll('textarea').forEach((ta, i) => {
